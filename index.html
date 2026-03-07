@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chúc Mừng Ngày 8/3</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#D62839",
+              secondary: "#FF5A5F",
+            },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+            fontFamily: {
+              sans: ["Open Sans", "sans-serif"],
+              playfair: ["Playfair Display", "serif"],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="gradient-bg min-h-screen text-white">
+    <audio id="background-music" preload="metadata"></audio>
+    <div
+      id="heart-cursor-container"
+      class="fixed inset-0 pointer-events-none z-[100]"
+    ></div>
+    <aside
+      id="music-player-card"
+      class="music-player-card"
+      aria-label="Trình phát nhạc"
+    >
+      <button
+        id="music-mobile-toggle"
+        class="music-player-mobile-toggle"
+        type="button"
+        aria-label="Mở trình phát nhạc"
+        aria-expanded="false"
+        aria-controls="music-player-panel"
+      >
+        <i
+          class="ri-music-2-fill music-player-mobile-toggle-icon music-player-mobile-toggle-icon-open"
+          aria-hidden="true"
+        ></i>
+        <i
+          class="ri-close-line music-player-mobile-toggle-icon music-player-mobile-toggle-icon-close"
+          aria-hidden="true"
+        ></i>
+        <span class="music-player-mobile-toggle-label">Nhạc</span>
+      </button>
+      <div id="music-player-panel" class="music-player-panel">
+        <span id="music-track-count" class="music-player-pill">
+          Playlist 1 / 1
+        </span>
+        <button
+          id="music-cover-button"
+          class="music-player-cover"
+          type="button"
+          aria-label="Phát nhạc"
+        >
+          <i class="ri-music-2-fill music-player-note" aria-hidden="true"></i>
+        </button>
+        <span id="music-track-name" class="music-player-name">
+          Đang tải bài hát
+        </span>
+        <span id="music-track-artist" class="music-player-artist">
+          Playlist 8/3
+        </span>
+        <div class="music-player-time">
+          <span id="music-current-time">0:00</span>
+          <span id="music-duration">0:00</span>
+        </div>
+        <input
+          id="music-seek"
+          class="music-player-seek"
+          type="range"
+          min="0"
+          max="100"
+          step="0.1"
+          value="0"
+          aria-label="Tua bài hát"
+        />
+        <div class="music-player-controls music-player-controls-primary">
+          <button
+            id="music-prev"
+            class="music-player-icon-button"
+            type="button"
+            aria-label="Bài trước"
+          >
+            <i class="ri-skip-left-fill" aria-hidden="true"></i>
+          </button>
+          <button
+            id="music-play"
+            class="music-player-icon-button music-player-icon-button-primary"
+            type="button"
+            aria-label="Phát nhạc"
+          >
+            <i class="ri-play-fill" aria-hidden="true"></i>
+          </button>
+          <button
+            id="music-next"
+            class="music-player-icon-button"
+            type="button"
+            aria-label="Bài tiếp theo"
+          >
+            <i class="ri-skip-right-fill" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="music-player-controls music-player-controls-secondary">
+          <button
+            id="music-shuffle"
+            class="music-player-icon-button music-player-toggle"
+            type="button"
+            aria-label="Bật phát ngẫu nhiên"
+            aria-pressed="false"
+          >
+            <i class="ri-shuffle-line" aria-hidden="true"></i>
+          </button>
+          <button
+            id="music-playlist-toggle"
+            class="music-player-icon-button music-player-toggle"
+            type="button"
+            aria-label="Mở playlist"
+            aria-expanded="false"
+            aria-controls="music-playlist-panel"
+          >
+            <i class="ri-play-list-2-line" aria-hidden="true"></i>
+          </button>
+          <button
+            id="music-mute"
+            class="music-player-icon-button music-player-toggle"
+            type="button"
+            aria-label="Tắt tiếng"
+            aria-pressed="false"
+          >
+            <i class="ri-volume-up-fill" aria-hidden="true"></i>
+          </button>
+          <button
+            id="music-repeat"
+            class="music-player-icon-button music-player-toggle is-active"
+            type="button"
+            aria-label="Lặp playlist"
+            aria-pressed="true"
+          >
+            <i class="ri-repeat-line" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="music-player-glow music-player-glow-one"></div>
+      <div class="music-player-glow music-player-glow-two"></div>
+      <div
+        id="music-playlist-panel"
+        class="music-playlist-panel"
+        aria-hidden="true"
+      >
+        <div class="music-playlist-head">
+          <span>Playlist</span>
+          <span id="music-playlist-size">1 bài</span>
+        </div>
+        <ul id="music-playlist" class="music-playlist-list"></ul>
+      </div>
+    </aside>
+    <div class="site-shell">
+      <header class="site-header">
+        <div class="site-brand site-brand-textonly">
+          <p class="site-brand-headline">MỪNG NGÀY PHỤ NỮ VIỆT NAM</p>
+        </div>
+        <div class="site-header-actions">
+          <a href="#confession-section" class="site-nav-link glass-surface-button">Xem lời chúc</a>
+          <div id="staggered-menu" class="staggered-menu-wrapper">
+            <button
+              id="sm-toggle"
+              class="sm-toggle glass-surface-button"
+              aria-label="Open menu"
+              aria-expanded="false"
+              aria-controls="staggered-menu-panel"
+              type="button"
+            >
+              <span class="sm-toggle-textWrap" aria-hidden="true">
+                <span class="sm-toggle-textInner">
+                  <span class="sm-toggle-line">Menu</span>
+                  <span class="sm-toggle-line">Close</span>
+                </span>
+              </span>
+              <span class="sm-icon" aria-hidden="true">
+                <span class="sm-icon-line"></span>
+                <span class="sm-icon-line sm-icon-line-v"></span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </header>
+      <div
+        id="staggered-menu-layer"
+        class="staggered-menu-layer"
+        data-position="left"
+      >
+        <div class="sm-prelayers" aria-hidden="true">
+          <div class="sm-prelayer sm-prelayer-1"></div>
+          <div class="sm-prelayer sm-prelayer-2"></div>
+        </div>
+        <button
+          id="sm-backdrop"
+          class="sm-panel-backdrop"
+          type="button"
+          aria-label="Đóng menu"
+        ></button>
+        <aside
+          id="staggered-menu-panel"
+          class="staggered-menu-panel"
+          aria-hidden="true"
+        >
+          <div class="sm-panel-inner">
+            <ul class="sm-panel-list" role="list" data-numbering="true">
+              <li class="sm-panel-itemWrap">
+                <a
+                  class="sm-panel-item"
+                  href="#hero-section"
+                  aria-label="Về đầu trang"
+                  data-number="01"
+                  data-menu-link
+                >
+                  <span class="sm-panel-itemLabel">Trang chủ</span>
+                </a>
+              </li>
+              <li class="sm-panel-itemWrap">
+                <a
+                  class="sm-panel-item"
+                  href="#heart-container"
+                  aria-label="Xem bó hoa 3D"
+                  data-number="02"
+                  data-menu-link
+                >
+                  <span class="sm-panel-itemLabel">Bó hoa 3D</span>
+                </a>
+              </li>
+              <li class="sm-panel-itemWrap">
+                <a
+                  class="sm-panel-item"
+                  href="#confession-section"
+                  aria-label="Xem lời chúc 8 tháng 3"
+                  data-number="03"
+                  data-menu-link
+                >
+                  <span class="sm-panel-itemLabel">Lời chúc 8/3</span>
+                </a>
+              </li>
+              <li class="sm-panel-itemWrap">
+                <a
+                  class="sm-panel-item"
+                  href="#gallery-section"
+                  aria-label="Xem bộ ảnh"
+                  data-number="04"
+                  data-menu-link
+                >
+                  <span class="sm-panel-itemLabel">Bộ ảnh</span>
+                </a>
+              </li>
+            </ul>
+
+            <div class="sm-socials" aria-label="Liên kết nhanh">
+              <h3 class="sm-socials-title">Đi nhanh</h3>
+              <ul class="sm-socials-list" role="list">
+                <li class="sm-socials-item">
+                  <a href="#hero-section" class="sm-socials-link" data-menu-link>
+                    Hero
+                  </a>
+                </li>
+                <li class="sm-socials-item">
+                  <a
+                    href="#confession-section"
+                    class="sm-socials-link"
+                    data-menu-link
+                  >
+                    Message
+                  </a>
+                </li>
+                <li class="sm-socials-item">
+                  <a
+                    href="#gallery-section"
+                    class="sm-socials-link"
+                    data-menu-link
+                  >
+                    Gallery
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </div>
+      <main class="site-main">
+        <section
+          id="hero-section"
+          class="hero-section"
+        >
+          <div class="hero-decor absolute inset-0 pointer-events-none">
+            <div
+              class="floating-heart floating-heart-hero absolute top-20 left-20 text-red-300 text-2xl"
+              aria-hidden="true"
+            >
+              <img
+                src="img/rose.png"
+                alt=""
+                class="flower-icon"
+              />
+            </div>
+            <div
+              class="floating-heart absolute top-32 right-32 text-red-200 text-lg"
+              aria-hidden="true"
+            >
+              <img
+                src="img/rose.png"
+                alt=""
+                class="flower-icon"
+              />
+            </div>
+            <div
+              class="floating-heart absolute bottom-40 left-40 text-red-300 text-xl"
+              aria-hidden="true"
+            >
+              <img
+                src="img/rose.png"
+                alt=""
+                class="flower-icon"
+              />
+            </div>
+            <div
+              class="floating-heart absolute bottom-20 right-20 text-red-200 text-2xl"
+              aria-hidden="true"
+            >
+              <img
+                src="img/rose.png"
+                alt=""
+                class="flower-icon"
+              />
+            </div>
+            <div
+              class="floating-heart floating-heart-medium absolute"
+              aria-hidden="true"
+              style="top: 12%; left: 36%; animation-delay: 0.9s;"
+            >
+              <img
+                src="img/rose.png"
+                alt=""
+                class="flower-icon"
+              />
+            </div>
+            <div
+              class="floating-heart floating-heart-small absolute"
+              aria-hidden="true"
+              style="top: 18%; right: 14%; animation-delay: 1.8s;"
+            >
+              <img
+                src="img/rose.png"
+                alt=""
+                class="flower-icon"
+              />
+            </div>
+            <div
+              class="floating-heart floating-heart-medium absolute"
+              aria-hidden="true"
+              style="bottom: 12%; left: 12%; animation-delay: 2.3s;"
+            >
+              <img
+                src="img/rose.png"
+                alt=""
+                class="flower-icon"
+              />
+            </div>
+          </div>
+          <div class="hero-layout">
+            <div class="hero-copy">
+              <span class="hero-eyebrow">International Women's Day</span>
+              <h1 class="main-title">Chúc Mừng Ngày 8/3</h1>
+              <p class="main-subtitle">
+                Không chỉ là một bó hoa, đây là món quà nhỏ được tạo ra để mang đến cho bạn một trải nghiệm thật đặc biệt.
+Hãy thử xoay, phóng to và khám phá bó hoa 3D này — mỗi góc nhìn đều chứa đựng một chút tinh tế và một chút yêu thương.
+              </p>
+              <p class="hero-helper">
+                Máy tính: Kéo chuột để xoay, lăn con lăn để phóng to / thu nhỏ.
+                Điện thoại: Kéo 1 ngón tay để xoay, chụm 2 ngón tay để zoom.
+              </p>
+            </div>
+
+            <div class="viewer-free">
+              <div id="heart-container" class="viewer-stage viewer-stage-free">
+                <canvas id="heart-canvas" class="w-full h-full"></canvas>
+                <div
+                  id="explosion-container"
+                  class="viewer-effects"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <div class="hero-scroll-wrap">
+            <a href="#gallery-section" class="hero-scroll-link">
+              <span>Xem thêm</span>
+              <i class="ri-arrow-down-line" aria-hidden="true"></i>
+            </a>
+          </div>
+        </section>
+        <section
+          class="curved-loop-section"
+          aria-labelledby="curved-loop-label"
+        >
+          <p id="curved-loop-label" class="sr-only">
+            Mừng ngày 8/3, chúc bạn luôn xinh đẹp, tự tin và hạnh phúc.
+          </p>
+          <div
+            class="curved-loop-jacket"
+            data-marquee-text="Mừng ngày 8/3 ✦ Chúc bạn luôn xinh đẹp ✦ Tự tin ✦ Hạnh phúc ✦ Rạng rỡ ✦"
+            data-speed="1.6"
+            data-curve-amount="180"
+            data-direction="left"
+            data-interactive="true"
+            aria-hidden="true"
+          ></div>
+        </section>
+        <section
+          id="gallery-section"
+          class="gallery-section"
+          aria-labelledby="gallery-title"
+        >
+          <div class="gallery-intro">
+            <div class="gallery-copy">
+              <span class="gallery-kicker">Bộ ảnh 8/3</span>
+              <h2 id="gallery-title" class="gallery-title">
+                Góc ảnh của bạn
+              </h2>
+            </div>
+            <div class="gallery-controls">
+              <p class="gallery-helper">
+                Chọn ảnh từ thiết bị hoặc thả nhanh vào khung.
+              </p>
+              <div class="gallery-actions">
+                <label for="gallery-upload" class="gallery-upload-button glass-surface-button">
+                  <i class="ri-image-add-line" aria-hidden="true"></i>
+                  <span>Thêm ảnh từ thiết bị</span>
+                </label>
+                <p id="gallery-upload-status" class="gallery-upload-status">
+                  Chưa có ảnh
+                </p>
+              </div>
+              <input
+                id="gallery-upload"
+                class="gallery-upload-input"
+                type="file"
+                accept="image/*"
+                multiple
+              />
+            </div>
+          </div>
+          <div
+            id="dome-gallery"
+            class="dg-root"
+            data-fit="0.8"
+            data-min-radius="600"
+            data-max-vertical-rotation-deg="0"
+            data-segments="34"
+            data-drag-dampening="2"
+            data-grayscale="false"
+            data-overlay-blur-color="rgba(40, 0, 0, 0.9)"
+            data-opened-image-width="250px"
+            data-opened-image-height="350px"
+            data-auto-rotate-speed="0.045"
+            data-has-images="false"
+          >
+            <div class="dg-empty-state">
+              <i class="ri-image-add-line" aria-hidden="true"></i>
+              <p>Thêm vài tấm ảnh để bắt đầu.</p>
+            </div>
+            <div
+              id="gallery-drop-hint"
+              class="dg-drop-hint"
+              aria-hidden="true"
+            >
+              <div class="dg-drop-card">
+                <i class="ri-upload-cloud-2-line" aria-hidden="true"></i>
+                <p>Thả ảnh vào đây</p>
+                <span>Tất cả ảnh sẽ được thêm ngay.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section
+          id="confession-section"
+          class="confession-section content-section"
+        >
+          <div class="section-card typing-card max-w-4xl mx-auto">
+            <span class="typing-kicker">Lời chúc 8/3</span>
+            <h2 class="typing-title">Viết ra bằng từng nhịp gõ</h2>
+            <div
+              id="text-type-greeting"
+              class="text-type typing-text"
+              data-texts='["Nhân dịp Ngày Quốc Tế Phụ Nữ 8/3, tôi – Huỳnh Minh Cường xin gửi những lời chúc chân thành và tốt đẹp nhất đến tất cả những người phụ nữ tuyệt vời xung quanh mình. Chúc cho các bà, các mẹ, các cô, các chị và tất cả các bạn nữ luôn mạnh khỏe, hạnh phúc, xinh đẹp và luôn tràn đầy năng lượng tích cực trong cuộc sống.\n\nPhụ nữ không chỉ là một nửa của thế giới, mà còn là những người mang đến sự ấm áp, yêu thương và nguồn động lực lớn lao cho những người xung quanh. Từ những điều nhỏ bé trong cuộc sống hằng ngày đến những cống hiến thầm lặng, tất cả đều góp phần làm cho cuộc sống trở nên ý nghĩa và tốt đẹp hơn. Sự dịu dàng, kiên cường và tận tâm của phụ nữ luôn là nguồn cảm hứng để mọi người không ngừng cố gắng và hoàn thiện bản thân.\n\nNhân ngày đặc biệt này, mong rằng tất cả phụ nữ sẽ luôn được yêu thương, trân trọng và nhận lại thật nhiều niềm vui trong cuộc sống. Chúc mọi người luôn tự tin theo đuổi những ước mơ của mình, luôn rạng rỡ, thành công và gặp nhiều may mắn trên con đường phía trước.\n\nMột lần nữa, xin chúc tất cả những người phụ nữ một ngày 8/3 thật ý nghĩa, hạnh phúc và tràn đầy niềm vui. Mong rằng nụ cười sẽ luôn hiện diện trên gương mặt của mọi người không chỉ trong ngày hôm nay mà trong mọi ngày của cuộc sống.\n\nChúc mừng Ngày Quốc Tế Phụ Nữ 8/3"]'
+              data-typing-speed="16"
+              data-pause-duration="1500"
+              data-deleting-speed="50"
+              data-show-cursor="true"
+              data-cursor-character="_"
+              data-loop="false"
+              data-start-on-visible="true"
+              data-cursor-blink-duration="0.5"
+            ></div>
+            <p class="typing-note">
+              Một lời chúc được viết riêng cho ngày 8/3 và hiện ra theo từng nhịp gõ.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
