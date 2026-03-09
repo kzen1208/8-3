@@ -54,8 +54,14 @@ const MUSIC_PLAYLIST = [
     src: "playlist/VƯƠNG BÌNH - Thanh Tân - 'ANH BỜ VAI' Ấn Bản KIM.mp3",
   },
 ];
+const PAGE_LOADING_STATE = {
+  pageReady: false,
+  modelReady: false,
+  hidden: false,
+};
 
 document.addEventListener("DOMContentLoaded", function () {
+  initPageLoader();
   setupStaggeredMenu();
   setupCurvedLoops();
   setupTextTypes();
@@ -65,6 +71,56 @@ document.addEventListener("DOMContentLoaded", function () {
   setupMusic();
   setupHeartCursor();
 });
+
+function initPageLoader() {
+  if (document.readyState === "complete") {
+    markPageLoaderPageReady();
+  } else {
+    window.addEventListener("load", markPageLoaderPageReady, { once: true });
+  }
+
+  window.setTimeout(() => {
+    hidePageLoader();
+  }, 9000);
+}
+
+function markPageLoaderPageReady() {
+  PAGE_LOADING_STATE.pageReady = true;
+  tryHidePageLoader();
+}
+
+function markPageLoaderModelReady() {
+  PAGE_LOADING_STATE.modelReady = true;
+  tryHidePageLoader();
+}
+
+function tryHidePageLoader() {
+  if (!PAGE_LOADING_STATE.pageReady || !PAGE_LOADING_STATE.modelReady) {
+    return;
+  }
+
+  hidePageLoader();
+}
+
+function hidePageLoader() {
+  if (PAGE_LOADING_STATE.hidden) {
+    return;
+  }
+
+  const loader = document.getElementById("page-loader");
+
+  PAGE_LOADING_STATE.hidden = true;
+  document.body.classList.remove("is-loading");
+
+  if (!loader) {
+    return;
+  }
+
+  loader.classList.add("is-hidden");
+  window.setTimeout(() => {
+    loader.remove();
+  }, 500);
+}
 
 function setupCurvedLoops() {
   const loops = document.querySelectorAll(".curved-loop-jacket");
@@ -521,6 +577,10 @@ function setupDomeGallery() {
   const root = document.getElementById("dome-gallery");
   const uploadInput = document.getElementById("gallery-upload");
   const uploadStatus = document.getElementById("gallery-upload-status");
+  const uploadLoaderText = document.getElementById(
+    "gallery-upload-loader-text"
+  );
+  const folderPicker = document.getElementById("gallery-folder-picker");
 
   if (!root) {
     return;
@@ -528,6 +588,19 @@ function setupDomeGallery() {
 
   const gallery = initDomeGallery(root);
   domeUpdateUploadStatus(uploadStatus, gallery.getImageCount());
+  let folderOpenTimer = 0;
+
+  function animateFolderPicker() {
+    if (!folderPicker) {
+      return;
+    }
+
+    window.clearTimeout(folderOpenTimer);
+    folderPicker.classList.add("is-open");
+    folderOpenTimer = window.setTimeout(() => {
+      folderPicker.classList.remove("is-open");
+    }, 1100);
+  }
 
   async function importFiles(files) {
     const imageFiles = Array.from(files || []).filter((file) =>
@@ -541,21 +614,56 @@ function setupDomeGallery() {
     if (uploadInput) {
       uploadInput.disabled = true;
     }
+    root.classList.add("is-uploading");
     if (uploadStatus) {
       uploadStatus.textContent = `Đang thêm ${imageFiles.length} ảnh...`;
     }
-
-    const newImages = await domeFilesToImageItems(
-      imageFiles,
-      gallery.getImageCount()
-    );
-    gallery.addImages(newImages);
-    domeUpdateUploadStatus(uploadStatus, gallery.getImageCount());
-
-    if (uploadInput) {
-      uploadInput.disabled = false;
-      uploadInput.value = "";
+    if (uploadLoaderText) {
+      uploadLoaderText.textContent =
+        imageFiles.length === 1
+          ? "Đang xếp 1 ảnh vào thư mục..."
+          : `Đang xếp ${imageFiles.length} ảnh vào thư mục...`;
     }
+
+    try {
+      const newImages = await domeFilesToImageItems(
+        imageFiles,
+        gallery.getImageCount()
+      );
+      gallery.addImages(newImages);
+      domeUpdateUploadStatus(uploadStatus, gallery.getImageCount());
+    } catch (error) {
+      console.error("Khong the them anh vao dome gallery.", error);
+      if (uploadStatus) {
+        uploadStatus.textContent = "Chua them duoc anh, thu lai nhe.";
+      }
+    } finally {
+      root.classList.remove("is-uploading");
+      if (uploadInput) {
+        uploadInput.disabled = false;
+        uploadInput.value = "";
+      }
+    }
+  }
+
+  if (folderPicker && uploadInput) {
+    folderPicker.addEventListener("click", () => {
+      if (!uploadInput.disabled) {
+        animateFolderPicker();
+      }
+    });
+
+    folderPicker.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") {
+        return;
+      }
+
+      event.preventDefault();
+      if (!uploadInput.disabled) {
+        animateFolderPicker();
+        uploadInput.click();
+      }
+    });
   }
 
   if (uploadInput) {
@@ -764,6 +872,10 @@ function initDomeGallery(root) {
   };
   const currentImages = [];
 
+  function hasRenderableItems() {
+    return sphere.childElementCount > 0;
+  }
+
   function renderItems(images) {
     sphere.replaceChildren();
     closeViewer();
@@ -771,11 +883,9 @@ function initDomeGallery(root) {
     currentImages.push(...images);
     root.dataset.hasImages = currentImages.length ? "true" : "false";
 
-    if (!currentImages.length) {
-      return;
-    }
-
-    const items = domeBuildItems(currentImages, options.segments);
+    const items = currentImages.length
+      ? domeBuildItems(currentImages, options.segments)
+      : domeBuildPlaceholderItems(options.segments);
 
     items.forEach((itemData, index) => {
       const item = document.createElement("div");
@@ -788,32 +898,55 @@ function initDomeGallery(root) {
       const button = document.createElement("button");
       button.className = "dg-item__image";
       button.type = "button";
-      button.setAttribute(
-        "aria-label",
-        itemData.alt || `Mở ảnh số ${index + 1}`
-      );
+      if (itemData.src) {
+        button.setAttribute(
+          "aria-label",
+          itemData.alt || `Mở ảnh số ${index + 1}`
+        );
 
-      const image = document.createElement("img");
-      image.src = itemData.src;
-      image.alt = itemData.alt || `Ảnh số ${index + 1}`;
-      image.draggable = false;
+        const image = document.createElement("img");
+        image.src = itemData.src;
+        image.alt = itemData.alt || `Ảnh số ${index + 1}`;
+        image.draggable = false;
+        button.appendChild(image);
+      } else {
+        button.classList.add("is-placeholder");
+        button.tabIndex = -1;
+        button.setAttribute("aria-hidden", "true");
 
-      button.appendChild(image);
+        const placeholder = document.createElement("span");
+        placeholder.className = "dg-item__placeholder";
+        placeholder.innerHTML = `
+          <span class="dg-item__placeholder-top">
+            <span class="dg-item__placeholder-dot"></span>
+            <span class="dg-item__placeholder-pill"></span>
+          </span>
+          <span class="dg-item__placeholder-lines">
+            <span class="dg-item__placeholder-line"></span>
+            <span class="dg-item__placeholder-line dg-item__placeholder-line--short"></span>
+            <span class="dg-item__placeholder-line dg-item__placeholder-line--tiny"></span>
+          </span>
+        `;
+        button.appendChild(placeholder);
+      }
+
       item.appendChild(button);
       sphere.appendChild(item);
 
-      button.addEventListener("click", () => {
-        if (
-          state.dragging ||
-          state.moved ||
-          performance.now() - state.lastDragEndAt < 120 ||
-          state.viewerOpen
-        ) {
-          return;
-        }
+      if (itemData.src) {
+        button.addEventListener("click", () => {
+          if (
+            state.dragging ||
+            state.moved ||
+            performance.now() - state.lastDragEndAt < 120 ||
+            state.viewerOpen
+          ) {
+            return;
+          }
 
-        openViewer(itemData);
-      });
+          openViewer(itemData);
+        });
+      }
     });
   }
 
@@ -935,7 +1068,7 @@ function initDomeGallery(root) {
   }
 
   main.addEventListener("pointerdown", (event) => {
-    if (state.viewerOpen || currentImages.length === 0) {
+    if (state.viewerOpen || !hasRenderableItems()) {
       return;
     }
 
@@ -1060,7 +1193,7 @@ function initDomeGallery(root) {
 
   function animateAutoRotate() {
     if (
-      currentImages.length > 0 &&
+      hasRenderableItems() &&
       !state.dragging &&
       !state.viewerOpen &&
       !state.inertiaFrame &&
@@ -1164,6 +1297,12 @@ function domeBuildItems(pool, segments) {
     src: usedImages[index].src,
     alt: usedImages[index].alt,
   }));
+}
+
+function domeBuildPlaceholderItems(segments) {
+  return domeBuildItems([], segments).filter(
+    (_, index) => index % 4 === 0 || index % 11 === 0
+  );
 }
 
 async function domeFilesToImageItems(files, startIndex = 0) {
@@ -1400,6 +1539,8 @@ function setupMusic() {
     const activeTrack = tracks[state.index];
     trackName.textContent = activeTrack.title;
     trackArtist.textContent = activeTrack.artist;
+    trackName.title = activeTrack.title;
+    trackArtist.title = activeTrack.artist;
     trackCount.textContent = `Playlist ${state.index + 1} / ${tracks.length}`;
     playlistSize.textContent = formatTrackCount(tracks.length);
   }
@@ -1707,6 +1848,11 @@ function initThreeJS() {
   const canvas = document.getElementById("heart-canvas");
   viewerContainer = document.getElementById("heart-container");
 
+  if (!canvas || !viewerContainer) {
+    markPageLoaderModelReady();
+    return;
+  }
+
   // Scene setup
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
@@ -1782,6 +1928,7 @@ function initThreeJS() {
 
       scene.add(heartModel);
       fitCameraToModel(heartModel);
+      markPageLoaderModelReady();
 
       // Start animation loop
       animate();
@@ -1789,6 +1936,7 @@ function initThreeJS() {
     undefined,
     function (error) {
       console.error("Error loading GLB model:", error);
+      markPageLoaderModelReady();
     }
   );
 

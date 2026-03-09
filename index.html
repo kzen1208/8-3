@@ -49,7 +49,27 @@
       };
     </script>
   </head>
-  <body class="gradient-bg min-h-screen text-white">
+  <body class="gradient-bg min-h-screen text-white is-loading">
+    <div
+      id="page-loader"
+      class="page-loader"
+      role="status"
+      aria-live="polite"
+      aria-label="Đang tải nội dung"
+    >
+      <div class="page-loader__inner">
+        <div class="dot-spinner" aria-hidden="true">
+          <div class="dot-spinner__dot"></div>
+          <div class="dot-spinner__dot"></div>
+          <div class="dot-spinner__dot"></div>
+          <div class="dot-spinner__dot"></div>
+          <div class="dot-spinner__dot"></div>
+          <div class="dot-spinner__dot"></div>
+          <div class="dot-spinner__dot"></div>
+          <div class="dot-spinner__dot"></div>
+        </div>
+      </div>
+    </div>
     <audio id="background-music" preload="metadata"></audio>
     <div
       id="heart-cursor-container"
@@ -90,12 +110,15 @@
         >
           <i class="ri-music-2-fill music-player-note" aria-hidden="true"></i>
         </button>
-        <span id="music-track-name" class="music-player-name">
-          Đang tải bài hát
-        </span>
-        <span id="music-track-artist" class="music-player-artist">
-          Playlist 8/3
-        </span>
+        <div class="music-player-meta">
+          <span class="music-player-meta-label">Đang phát</span>
+          <span id="music-track-name" class="music-player-name">
+            Đang tải bài hát
+          </span>
+          <span id="music-track-artist" class="music-player-artist">
+            Playlist 8/3
+          </span>
+        </div>
         <div class="music-player-time">
           <span id="music-current-time">0:00</span>
           <span id="music-duration">0:00</span>
@@ -193,8 +216,8 @@
     <div class="site-shell">
       <header class="site-header">
         <div class="site-brand site-brand-textonly">
-          <p class="site-brand-headline">MỪNG QUỐC TẾ PHỤ NỮ</p>
-        </div>
+          <p class="site-brand-headline">MỪNG NGÀY QUỐC TẾ PHỤ NỮ</p>
+       </div>
         <div class="site-header-actions">
           <a href="#confession-section" class="site-nav-link glass-surface-button">Xem lời chúc</a>
           <div id="staggered-menu" class="staggered-menu-wrapper">
@@ -398,7 +421,7 @@
                 class="flower-icon"
               />
             </div>
-          </div>
+          </div>x
           <div class="hero-layout">
             <div class="hero-copy">
               <span class="hero-eyebrow">International Women's Day</span>
@@ -459,27 +482,9 @@ Hãy thử xoay, phóng to và khám phá bó hoa 3D này — mỗi góc nhìn �
                 Góc ảnh của bạn
               </h2>
             </div>
-            <div class="gallery-controls">
-              <p class="gallery-helper">
-                Chọn ảnh từ thiết bị hoặc thả nhanh vào khung.
-              </p>
-              <div class="gallery-actions">
-                <label for="gallery-upload" class="gallery-upload-button glass-surface-button">
-                  <i class="ri-image-add-line" aria-hidden="true"></i>
-                  <span>Thêm ảnh từ thiết bị</span>
-                </label>
-                <p id="gallery-upload-status" class="gallery-upload-status">
-                  Chưa có ảnh
-                </p>
-              </div>
-              <input
-                id="gallery-upload"
-                class="gallery-upload-input"
-                type="file"
-                accept="image/*"
-                multiple
-              />
-            </div>
+            <p class="gallery-helper">
+              Thả vài tấm xinh vào đây để dome hóa thành góc kỷ niệm nho nhỏ nha.
+            </p>
           </div>
           <div
             id="dome-gallery"
@@ -496,9 +501,56 @@ Hãy thử xoay, phóng to và khám phá bó hoa 3D này — mỗi góc nhìn �
             data-auto-rotate-speed="0.045"
             data-has-images="false"
           >
+            <div class="dg-picker-hud">
+              <label
+                for="gallery-upload"
+                id="gallery-folder-picker"
+                class="gallery-folder-picker"
+                role="button"
+                tabindex="0"
+                aria-label="Thêm ảnh từ thiết bị"
+              >
+                <span class="gallery-folder-picker__stage" aria-hidden="true">
+                  <span class="gallery-folder">
+                    <span class="gallery-folder__back">
+                      <span class="gallery-folder__paper gallery-folder__paper--1"></span>
+                      <span class="gallery-folder__paper gallery-folder__paper--2"></span>
+                      <span class="gallery-folder__paper gallery-folder__paper--3"></span>
+                      <span class="gallery-folder__front"></span>
+                      <span class="gallery-folder__front gallery-folder__front--right"></span>
+                    </span>
+                  </span>
+                </span>
+                <span class="gallery-folder-picker__copy">
+                  <strong>Thêm ảnh từ thiết bị</strong>
+                  <small>Chạm để mở thư mục ảnh</small>
+                </span>
+              </label>
+              <p id="gallery-upload-status" class="gallery-upload-status">
+                Chưa có ảnh
+              </p>
+            </div>
+            <div class="dg-upload-loader" aria-hidden="true">
+              <div class="dg-upload-loader-card">
+                <div class="folder-loader folder-loader--upload">
+                  <div class="folder-loader__body">
+                    <div class="folder-loader__paper folder-loader__paper--1"></div>
+                    <div class="folder-loader__paper folder-loader__paper--2"></div>
+                    <div class="folder-loader__paper folder-loader__paper--3"></div>
+                    <div class="folder-loader__front"></div>
+                    <div class="folder-loader__front folder-loader__front--right"></div>
+                  </div>
+                </div>
+                <p class="dg-upload-loader-title">Đang thêm ảnh</p>
+                <span
+                  id="gallery-upload-loader-text"
+                  class="dg-upload-loader-text"
+                >Đang xếp ảnh vào thư mục...</span>
+              </div>
+            </div>
             <div class="dg-empty-state">
-              <i class="ri-image-add-line" aria-hidden="true"></i>
-              <p>Thêm vài tấm ảnh để bắt đầu.</p>
+              <p>Dome đang chờ ảnh xinh của bạn.</p>
+              <span>Kéo vào đây hoặc chạm folder nha.</span>
             </div>
             <div
               id="gallery-drop-hint"
@@ -511,6 +563,13 @@ Hãy thử xoay, phóng to và khám phá bó hoa 3D này — mỗi góc nhìn �
                 <span>Tất cả ảnh sẽ được thêm ngay.</span>
               </div>
             </div>
+            <input
+              id="gallery-upload"
+              class="gallery-upload-input"
+              type="file"
+              accept="image/*"
+              multiple
+            />
           </div>
         </section>
         <section
